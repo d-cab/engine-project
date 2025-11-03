@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <chrono>
+#include <thread>
 
 const int SIDE_LENGTH = 10;
 const int WINDOW_HEIGHT = 35;
@@ -27,13 +29,14 @@ private:
 
 };
 
-int main()
+void printScreen(const std::vector<std::string>& screen)
 {
-    std::vector<std::string> screen(WINDOW_HEIGHT, std::string(WINDOW_WIDTH, '-'));
-    
-    Cube cube(SIDE_LENGTH);
-    cube.setPosition(10, 5);
+    for (const auto& row : screen)
+        std::cout << row << '\n';
+}
 
+void updateScreen(std::vector<std::string>& screen, const Cube& cube)
+{
     auto [pos_x, pos_y] = cube.getPosition();
 
     for (int i = 0; i < cube.getSideLength(); ++i)
@@ -46,10 +49,41 @@ int main()
             }
         }
     }
+}
+
+int main()
+{
+    std::vector<std::string> screen(WINDOW_HEIGHT, std::string(WINDOW_WIDTH, '-'));
     
-    for (const auto& row : screen)
-        std::cout << row << '\n';
-    
+    Cube cube(SIDE_LENGTH);
+    cube.setPosition(0, 0);
+
+    auto [pos_x, pos_y] = cube.getPosition();
+
+
+    int vx = 3;
+    int vy = 1;
+
+    while (true)
+    {
+        // reset screen
+        for (auto &row : screen)
+            row.assign(WINDOW_WIDTH, '-');
+
+        updateScreen(screen, cube);
+
+        // clear terminal and print
+        std::cout << "\033[H\033[J";
+        printScreen(screen);
+
+        // move cube by its velocity (let it fly away off-screen)
+        pos_x += vx;
+        pos_y += vy;
+        cube.setPosition(pos_x, pos_y);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+
     return 0;    
 }    
 
